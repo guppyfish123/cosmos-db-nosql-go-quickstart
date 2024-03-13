@@ -3,199 +3,189 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"log"
 	"os"
+    "net/http"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
+	"github.com/gorilla/mux"
 )
 
-func startCosmos(writeOutput func(msg string)) error {
+func authenticateCosmosDB() (*azcosmos.Client, error) {
 	endpoint := os.Getenv("COSMOS_DB_ENDPOINT")
-	log.Println("ENDPOINT:", endpoint)
 
-	// <create_client>
 	credential, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	clientOptions := azcosmos.ClientOptions{
 		EnableContentResponseOnWrite: true,
 	}
-	
+
 	client, err := azcosmos.NewClient(endpoint, credential, &clientOptions)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	// </create_client>
-	writeOutput("Current Status:\tStarting...")
+
+	return client, nil
+}
+
+func getCert(w http.ResponseWriter, r *http.Request) {
+
+	///////////////////////////////////////////
+	//DB Authentication
+	client, err := authenticateCosmosDB()
+	if err != nil {
+		http.Error(w, "DB Auth Error", http.StatusInternalServerError)
+		return
+	}
 
 	// <get_database>
 	database, err := client.NewDatabase("cosmicworks")
 	if err != nil {
-		return err
+		http.Error(w, "DB Auth Error", http.StatusInternalServerError)
+		return
 	}
-	// </get_database>
-	writeOutput(fmt.Sprintf("Get database:\t%s", database.ID()))
 
 	// <get_container>
-	container, err := database.NewContainer("products")
+	container, err := database.NewContainer("certifications")
 	if err != nil {
-		return err
-	}
-	// </get_container>
-	writeOutput(fmt.Sprintf("Get container:\t%s", container.ID()))
-
-	{
-		// <create_item>
-		item := Item {
-			Id:			"70b63682-b93a-4c77-aad2-65501347265f",
-			Category:	"gear-surf-surfboards",
-			Name:		"Yamba Surfboard",
-			Quantity:	12,
-			Price:		850.00,
-			Clearance:	false,
-		}
-
-		partitionKey := azcosmos.NewPartitionKeyString("gear-surf-surfboards")
-
-		context := context.TODO()
-
-		bytes, err := json.Marshal(item)
-		if err != nil {
-			return err
-		}
-
-		response, err := container.UpsertItem(context, partitionKey, bytes, nil)
-		if err != nil {
-			return err
-		}
-		// </create_item>	
-		if response.RawResponse.StatusCode == 200 || response.RawResponse.StatusCode == 201 {
-			created_item := Item{}
-			err := json.Unmarshal(response.Value, &created_item)
-			if err != nil {
-				return err
-			}
-			writeOutput(fmt.Sprintf("Upserted item:\t%v", created_item))
-		}
-		writeOutput(fmt.Sprintf("Status code:\t%d", response.RawResponse.StatusCode))
-		writeOutput(fmt.Sprintf("Request charge:\t%.2f", response.RequestCharge))
+		http.Error(w, "DB Auth Error", http.StatusInternalServerError)
+		return
 	}
 
-	{
-		item := Item {
-			Id:			"25a68543-b90c-439d-8332-7ef41e06a0e0",
-			Category:	"gear-surf-surfboards",
-			Name:		"Kiama Classic Surfboard",
-			Quantity:	25,
-			Price:		790.00,
-			Clearance:	true,
-		}
+	///////////////////////////////////////////
 
-		partitionKey := azcosmos.NewPartitionKeyString("gear-surf-surfboards")
+	//Input Parameters
+    vars := mux.Vars(r)
+    
+    inputKey := vars["Key"]
+    inputValue := vars["Value"]
 
-		context := context.TODO()
+	// inputKey validation
+	validKeyInputs := [...]string{"id", "category", "company"}
 
-		bytes, err := json.Marshal(item)
-		if err != nil {
-			return err
-		}
+	found := false
 
-		response, err := container.UpsertItem(context, partitionKey, bytes, nil)
-		if err != nil {
-			return err
-		}
-
-		if response.RawResponse.StatusCode == 200 || response.RawResponse.StatusCode == 201 {
-			created_item := Item{}
-			err := json.Unmarshal(response.Value, &created_item)
-			if err != nil {
-				return err
-			}
-			writeOutput(fmt.Sprintf("Upserted item:\t%v", created_item))
-		}
-		writeOutput(fmt.Sprintf("Status code:\t%d", response.RawResponse.StatusCode))
-		writeOutput(fmt.Sprintf("Request charge:\t%.2f", response.RequestCharge))
-	
+	for i := 0; i < 5; i++ {
+		if inputKey == validKeyInputs[i] {
+			found = true
+			break
+		} 
+	}
+	if !found {
+		http.Error(w, "Error: Input key is not valid.", http.StatusBadRequest)
+		return
 	}
 
-	{
-		// <read_item>
-		partitionKey := azcosmos.NewPartitionKeyString("gear-surf-surfboards")
+	// Validate Name length and pattern
+	if len(inputKey)+len(inputValue) > 50 {
+		http.Error(w, "Name exceeds maximum length", http.StatusBadRequest)
+		return
+	}
 
-		context := context.TODO()
+	partitionKey := azcosmos.NewPartitionKeyString("certification")
 
-		itemId := "70b63682-b93a-4c77-aad2-65501347265f"
+    // Construct the query dynamically
+    query := "SELECT * FROM certifications c WHERE c." + inputKey + " = @value"
+    queryOptions := azcosmos.QueryOptions{
+        QueryParameters: []azcosmos.QueryParameter{
+            {Name: "@value", Value: inputValue},
+        },
+    }
 
-		response, err := container.ReadItem(context, partitionKey, itemId, nil)
+	// Execute query
+	context := context.TODO()
+	queryPager := container.NewQueryItemsPager(query, partitionKey, &queryOptions)
+
+	var certs []Certs
+
+	for queryPager.More() {
+		queryResponse, err := queryPager.NextPage(context)
 		if err != nil {
-			return err
+			http.Error(w, "No Item Found", http.StatusInternalServerError)
+			return
 		}
 
-		if response.RawResponse.StatusCode == 200 {
-			read_item := Item{}
-			err := json.Unmarshal(response.Value, &read_item)
-			if err != nil {
-				return err
+		for _, item := range queryResponse.Items {
+			var cert Certs
+			if err := json.Unmarshal(item, &cert); err != nil {
+				http.Error(w, "No Item Found", http.StatusInternalServerError)
+				return
 			}
-			// </read_item>
-			writeOutput(fmt.Sprintf("Read item id:\t%s", read_item.Id))
-			writeOutput(fmt.Sprintf("Read item:\t%v", read_item))
+			certs = append(certs, cert)
 		}
-
-		writeOutput(fmt.Sprintf("Status code:\t%d", response.RawResponse.StatusCode))
-		writeOutput(fmt.Sprintf("Request charge:\t%.2f", response.RequestCharge))
 	}
 
-	{
-		// <query_items>
-		partitionKey := azcosmos.NewPartitionKeyString("gear-surf-surfboards")
+	// Write response
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(certs); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
 
-		query := "SELECT * FROM products p WHERE p.category = @category"
-
-		queryOptions := azcosmos.QueryOptions{
-			QueryParameters: []azcosmos.QueryParameter{
-				{Name: "@category", Value: "gear-surf-surfboards"},
-			},
-		}
-
-		pager := container.NewQueryItemsPager(query, partitionKey, &queryOptions)
-		// </query_items>
-
-		// <parse_results>
-		context := context.TODO()
-
-		items := []Item{}
-
-		requestCharge := float32(0)
-
-		for pager.More() {
-			response, err := pager.NextPage(context)
-			if err != nil {
-				return err
-			}
-
-			requestCharge += response.RequestCharge
-
-			for _, bytes := range response.Items {
-				item := Item{}
-				err := json.Unmarshal(bytes, &item)
-				if err != nil {
-					return err
-				}
-				items = append(items, item)
-			}
-		}
-		// </parse_results>
-
-		for _, item := range items {
-			writeOutput(fmt.Sprintf("Found item:\t%s\t%s", item.Name, item.Id))
-		}
-		writeOutput(fmt.Sprintf("Request charge:\t%.2f", requestCharge))
+func getCerts(w http.ResponseWriter, r *http.Request) {
+	// Authenticate Cosmos DB
+	client, err := authenticateCosmosDB()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	return nil
+	// Get database and container
+	database, err := client.NewDatabase("cosmicworks")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	container, err := database.NewContainer("certifications")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	partitionKey := azcosmos.NewPartitionKeyString("certification")
+
+	// Define query and options
+	query := "SELECT * FROM certifications c WHERE c.category = @category"
+
+	// Seperating the value of @category is important for dynamic variable as it prevents sql injectin attacks
+	queryOptions := azcosmos.QueryOptions{
+		QueryParameters: []azcosmos.QueryParameter{
+			{Name: "@category", Value: "certification"},
+		},
+	}
+
+	// Execute query
+	context := context.TODO()
+	queryPager := container.NewQueryItemsPager(query, partitionKey, &queryOptions)
+
+	var certs []Certs
+
+	for queryPager.More() {
+		queryResponse, err := queryPager.NextPage(context)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		for _, item := range queryResponse.Items {
+			var cert Certs
+			if err := json.Unmarshal(item, &cert); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			certs = append(certs, cert)
+		}
+	}
+
+	// Write response
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(certs); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

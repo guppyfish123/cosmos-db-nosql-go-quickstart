@@ -1,12 +1,14 @@
 package main
 
 // <model>
-type Item struct {
-	Id 			string	`json:"id"`
-	Category 	string	`json:"category"`
-	Name 		string	`json:"name"`
-	Quantity 	int		`json:"quantity"`
-	Price		float32	`json:"price"`
-	Clearance	bool	`json:"clearance"`
+type Certs struct {
+	Id       string `json:"id"`
+	Category string `json:"category"`
+	Compnay  string `json:"company"`
+	Title    string `json:"title"`
+	Date     string `json:"date"`
+	Link     string `json:"link"`
+	Skills    string `json:"skills"`
 }
+
 // </model>

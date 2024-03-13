@@ -11,7 +11,6 @@ RUN go build -o main .
 FROM alpine
 
 COPY --from=build /app/main /main
-COPY --from=build /app/static /static
 
 EXPOSE 8000
 
