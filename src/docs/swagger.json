@@ -1,0 +1,119 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Certifications",
+      "description": "Patrick's website API for resume for research & developement purposes, hosted on azure",
+      "version": "1.0.0"
+    },
+    "servers": [
+      {
+        "url": "https://virtserver.swaggerhub.com/GUPPYFISHGAMER/Azure-api/1.0.0",
+        "description": "SwaggerHub API Auto Mocking"
+      },
+      {
+        "url": "https://container-app-ilm34snayo7qw.politeplant-0cb21c20.australiaeast.azurecontainerapps.io/certifications/api/v1",
+        "description": "Patrick's website API for resume for research & developement purposes, hosted on azure"
+      }
+    ],
+    "paths": {
+      "/cert/{Key}/{Value}": {
+        "get": {
+          "tags": [
+            "Certifications"
+          ],
+          "operationId": "getCert",
+          "parameters": [
+            {
+              "name": "Key",
+              "in": "path",
+              "required": true,
+              "style": "simple",
+              "explode": false,
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "id",
+                  "category",
+                  "company"
+                ]
+              }
+            },
+            {
+              "name": "Value",
+              "in": "path",
+              "required": true,
+              "style": "simple",
+              "explode": false,
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Get a specificed certification listing",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CertListings"
+                  }
+                }
+              }
+            }
+          },
+          "x-swagger-router-controller": "cert"
+        }
+      },
+      "/certs": {
+        "get": {
+          "tags": [
+            "Certifications"
+          ],
+          "operationId": "listCerts",
+          "responses": {
+            "200": {
+              "description": "Get a specificed certification listing",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CertListings"
+                  }
+                }
+              }
+            }
+          },
+          "x-swagger-router-controller": "Certs"
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "CertListings": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "category": {
+              "type": "string"
+            },
+            "company": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "date": {
+              "type": "string"
+            },
+            "link": {
+              "type": "string"
+            },
+            "skills": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
