@@ -1,76 +1,79 @@
----
-openapi: 3.0.0
+basePath: /certifications/api/v1
+definitions:
+  main.Certs:
+    properties:
+      category:
+        type: string
+      company:
+        type: string
+      date:
+        type: string
+      id:
+        type: string
+      link:
+        type: string
+      skills:
+        type: string
+      title:
+        type: string
+    type: object
+host: container-app-ilm34snayo7qw.politeplant-0cb21c20.australiaeast.azurecontainerapps.io
 info:
-  title: Certifications
-  description: "Patrick's website API for resume for research & developement purposes, hosted on azure"
-  version: 1.0.0
-servers:
-- url: https://virtserver.swaggerhub.com/GUPPYFISHGAMER/Azure-api/1.0.0
-  description: SwaggerHub API Auto Mocking
-- url: https://container-app-ilm34snayo7qw.politeplant-0cb21c20.australiaeast.azurecontainerapps.io/certifications/api/v1
-  description: "Patrick's website API for resume for research & developement purposes, hosted on azure"
+  contact: {}
+  description: Patrick's website API for Certification listings
+  title: Certification Listings API
+  version: "1.0"
 paths:
-  /cert/{Key}/{Value}:
+  /cert/{key}/{value}:
     get:
-      tags:
-      - Certifications
-      operationId: getCert
+      consumes:
+      - application/json
+      description: Get a certification by a certain key & value
       parameters:
-      - name: Key
+      - description: Select Category for Search
+        enum:
+        - id
+        - category
+        - company
         in: path
+        name: key
         required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-          enum:
-          - id
-          - category
-          - company
-      - name: Value
+        type: string
+      - description: Select Category for Search
+        example: Microsoft
         in: path
+        name: value
         required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
+        type: string
+      produces:
+      - application/json
       responses:
         "200":
-          description: Get a specificed certification listing
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CertListings'
-      x-swagger-router-controller: cert
+          description: OK
+          schema:
+            $ref: '#/definitions/main.Certs'
+      summary: Show a Specified Cert
+      tags:
+      - Certifications
   /certs:
     get:
-      tags:
-      - Certifications
-      operationId: listCerts
+      consumes:
+      - application/json
+      description: List all current Certifications by Patrick
+      parameters:
+      - description: Top results
+        example: 3
+        in: query
+        name: top
+        type: integer
+      produces:
+      - application/json
       responses:
         "200":
-          description: Get a specificed certification listing
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CertListings'
-      x-swagger-router-controller: Certs
-components:
-  schemas:
-    CertListings:
-      type: object
-      properties:
-        id:
-          type: string
-        category:
-          type: string
-        company:
-          type: string
-        title:
-          type: string
-        date:
-          type: string
-        link:
-          type: string
-        skills:
-          type: string
+          description: OK
+          schema:
+            $ref: '#/definitions/main.Certs'
+      summary: Show Certification Listings
+      tags:
+      - Certifications
+swagger: "2.0"

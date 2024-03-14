@@ -14,17 +14,123 @@ const docTemplate = `{
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
-    "paths": {}
+    "paths": {
+        "/cert/{key}/{value}": {
+            "get": {
+                "description": "Get a certification by a certain key \u0026 value",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Certifications"
+                ],
+                "summary": "Show a Specified Cert",
+                "parameters": [
+                    {
+                        "enum": [
+                            "id",
+                            "category",
+                            "company"
+                        ],
+                        "type": "string",
+                        "description": "Select Category for Search",
+                        "name": "key",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "Microsoft",
+                        "description": "Select Category for Search",
+                        "name": "value",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.Certs"
+                        }
+                    }
+                }
+            }
+        },
+        "/certs": {
+            "get": {
+                "description": "List all current Certifications by Patrick",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Certifications"
+                ],
+                "summary": "Show Certification Listings",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "example": 3,
+                        "description": "Top results",
+                        "name": "top",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.Certs"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "main.Certs": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "company": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "link": {
+                    "type": "string"
+                },
+                "skills": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        }
+    }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "container-app-ilm34snayo7qw.politeplant-0cb21c20.australiaeast.azurecontainerapps.io",
+	BasePath:         "/certifications/api/v1",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Certification Listings API",
+	Description:      "Patrick's website API for Certification listings",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

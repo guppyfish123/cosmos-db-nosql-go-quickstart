@@ -10,5 +10,3 @@ type Certs struct {
 	Link     string `json:"link"`
 	Skills    string `json:"skills"`
 }
-
-// </model>

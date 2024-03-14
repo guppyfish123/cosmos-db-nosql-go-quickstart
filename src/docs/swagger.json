@@ -1,119 +1,118 @@
 {
-    "openapi": "3.0.0",
+    "swagger": "2.0",
     "info": {
-      "title": "Certifications",
-      "description": "Patrick's website API for resume for research & developement purposes, hosted on azure",
-      "version": "1.0.0"
+        "description": "Patrick's website API for Certification listings",
+        "title": "Certification Listings API",
+        "contact": {},
+        "version": "1.0"
     },
-    "servers": [
-      {
-        "url": "https://virtserver.swaggerhub.com/GUPPYFISHGAMER/Azure-api/1.0.0",
-        "description": "SwaggerHub API Auto Mocking"
-      },
-      {
-        "url": "https://container-app-ilm34snayo7qw.politeplant-0cb21c20.australiaeast.azurecontainerapps.io/certifications/api/v1",
-        "description": "Patrick's website API for resume for research & developement purposes, hosted on azure"
-      }
-    ],
+    "host": "container-app-ilm34snayo7qw.politeplant-0cb21c20.australiaeast.azurecontainerapps.io",
+    "basePath": "/certifications/api/v1",
     "paths": {
-      "/cert/{Key}/{Value}": {
-        "get": {
-          "tags": [
-            "Certifications"
-          ],
-          "operationId": "getCert",
-          "parameters": [
-            {
-              "name": "Key",
-              "in": "path",
-              "required": true,
-              "style": "simple",
-              "explode": false,
-              "schema": {
-                "type": "string",
-                "enum": [
-                  "id",
-                  "category",
-                  "company"
-                ]
-              }
-            },
-            {
-              "name": "Value",
-              "in": "path",
-              "required": true,
-              "style": "simple",
-              "explode": false,
-              "schema": {
-                "type": "string"
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "Get a specificed certification listing",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/CertListings"
-                  }
+        "/cert/{key}/{value}": {
+            "get": {
+                "description": "Get a certification by a certain key \u0026 value",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Certifications"
+                ],
+                "summary": "Show a Specified Cert",
+                "parameters": [
+                    {
+                        "enum": [
+                            "id",
+                            "category",
+                            "company"
+                        ],
+                        "type": "string",
+                        "description": "Select Category for Search",
+                        "name": "key",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "Microsoft",
+                        "description": "Select Category for Search",
+                        "name": "value",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.Certs"
+                        }
+                    }
                 }
-              }
             }
-          },
-          "x-swagger-router-controller": "cert"
-        }
-      },
-      "/certs": {
-        "get": {
-          "tags": [
-            "Certifications"
-          ],
-          "operationId": "listCerts",
-          "responses": {
-            "200": {
-              "description": "Get a specificed certification listing",
-              "content": {
-                "application/json": {
-                  "schema": {
-                    "$ref": "#/components/schemas/CertListings"
-                  }
+        },
+        "/certs": {
+            "get": {
+                "description": "List all current Certifications by Patrick",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Certifications"
+                ],
+                "summary": "Show Certification Listings",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "example": 3,
+                        "description": "Top results",
+                        "name": "top",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/main.Certs"
+                        }
+                    }
                 }
-              }
             }
-          },
-          "x-swagger-router-controller": "Certs"
         }
-      }
     },
-    "components": {
-      "schemas": {
-        "CertListings": {
-          "type": "object",
-          "properties": {
-            "id": {
-              "type": "string"
-            },
-            "category": {
-              "type": "string"
-            },
-            "company": {
-              "type": "string"
-            },
-            "title": {
-              "type": "string"
-            },
-            "date": {
-              "type": "string"
-            },
-            "link": {
-              "type": "string"
-            },
-            "skills": {
-              "type": "string"
+    "definitions": {
+        "main.Certs": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "company": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "link": {
+                    "type": "string"
+                },
+                "skills": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
             }
-          }
         }
-      }
     }
-  }
+}
